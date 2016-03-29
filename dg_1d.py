@@ -1,7 +1,8 @@
 ###############################################################################
 # DG Demo By ShiJingchang, 2016年 03月 16日 星期三 20:39:42 CST
 # Email: jingchangshi@gmail.com
-# Translate from MATLAB scripts written by ...
+# Translate from MATLAB scripts written by userjjb.
+# Refer to this link: https://github.com/userjjb/22_6xx-DG-for-PDEs
 # Reference:
 #   Cockburn, B., & Shu, C.-W. (2001). Runge – Kutta Discontinuous Galerkin
 #   Methods for Convection-Dominated Problems. Journal of Scientific Computing,
