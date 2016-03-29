@@ -22,8 +22,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from sympy import symbols, cos, pi, integrate, Matrix
+from sympy import Piecewise
 
-TestfuncNMAX = 2
+TestfuncNMAX = 2 # Currently it is hard coded.
 ElementNMAX = 32
 XNode_Vec = np.linspace(0.0, 1.0, ElementNMAX + 1)
 ElementSize = 1.0 / ElementNMAX
@@ -41,7 +42,9 @@ ElementSize = 1.0 / ElementNMAX
 #       If You can't understand, integrate it one step by step will help you.
 MassMatrix_Mat = np.array([[1.0/3.0, 1.0/6.0], [1.0/6.0, 1.0/3.0]])
 x = symbols('x')
-u_0 = cos(2*pi*x)
+# u_0 = cos(2*pi*x)
+u_0 = Piecewise((0.0, x<0.4), (1.0, x<=0.6), (0.0, x>0.6))
+# u_0 = Piecewise((1.0, x<=0.25), (2.0-4.0*x, x<=0.5), (4.0*x-2.0, x<=0.75), (1.0, x>0.75))
 
 a, b = symbols('a b')
 Integral_u0_Mat = Matrix(np.zeros((TestfuncNMAX, ElementNMAX)))
@@ -49,6 +52,7 @@ Integral_u0_Mat = Matrix(np.zeros((TestfuncNMAX, ElementNMAX)))
 v_h = (b - x) / (b - a)
 Integrand_u0 = u_0 * v_h
 Integral_u0 = integrate(Integrand_u0, (x, a, b))
+print("Integral of the inital u0 is complete!")
 for ElementInd in range(ElementNMAX):
     Integral_u0_Mat[0, ElementInd] = \
         Integral_u0.subs(a, XNode_Vec[ElementInd])
@@ -71,7 +75,7 @@ for ElementInd in range(ElementNMAX):
 
 Integral_u0_Mat = np.array(Integral_u0_Mat).astype(np.float64)
 Coeffi_Mat = np.linalg.solve(MassMatrix_Mat * ElementSize, Integral_u0_Mat)
-
+print("Initial values of coefficients is obtained!")
 # Assemble SemiMatrix system
 # Employ upwind flux(refer to the definition of numerical flux in reference).
 UpwindFlux_Mat = np.array([[-1, 0, 0], [0, 0, 1]])
@@ -90,10 +94,10 @@ SemiMatrix_Mat = np.roll(SemiMatrix_Mat, -1, axis=1)
 StencilInd = StencilInd + 2
 SemiMatrix_Mat[StencilInd:StencilInd+2, StencilInd-1:StencilInd+2] = \
     Stencil_Mat
-
+print("Semi Matrix system is obtained!")
 # Employ Euler time marching scheme
 TimeStep = 1E-4
-TimeNMAX = np.int(1E3)
+TimeNMAX = np.int(1E2)
 
 Coeffi_Mat = Coeffi_Mat.reshape((ElementNMAX*TestfuncNMAX, 1), order='F')
 
@@ -117,14 +121,17 @@ def getUh(XValue):
     return FunctionUh
 
 # Plot the global solution
-PltXNodeNMAX = np.int(ElementNMAX*4)
+PltXNodeNMAX = np.int(ElementNMAX*2)
 PltXNode_Vec = np.linspace(0.0, 1.0, PltXNodeNMAX)
-UhValue_Vec = np.zeros(PltXNodeNMAX)
+UhValue_Vec = np.zeros(PltXNodeNMAX,)
 for PltInd in range(PltXNodeNMAX):
     XValue = PltXNode_Vec[PltInd]
     UhValue_Vec[PltInd] = getUh(XValue)
 
-plt.plot(XNode_Vec, np.cos(2*np.pi*XNode_Vec), 'r')
-plt.plot(np.linspace(0.0, 1.0, PltXNodeNMAX), UhValue_Vec, 'g')
+PltU0_Vec = np.zeros(PltXNodeNMAX,)
+for PltInd in range(PltXNodeNMAX):
+    PltU0_Vec[PltInd] = np.array(u_0.subs(x, PltXNode_Vec[PltInd])).astype(float)
+plt.plot(PltXNode_Vec, PltU0_Vec, 'ro')
+plt.plot(PltXNode_Vec, UhValue_Vec, 'gs')
 plt.show()
 
